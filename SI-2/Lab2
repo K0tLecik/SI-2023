@@ -1,0 +1,50 @@
+import gradio as gr
+import pandas as pd
+
+
+def read_table(file):
+    try:
+        table = pd.read_csv(file)
+        return table
+    except Exception:
+        return None
+
+
+def display_table(table, rows):
+    if table is None:
+        return "Błąd wczytywania pliku"
+    elif rows == 0:
+        return "Podaj ilość wierszy"
+    else:
+        rows = min(int(rows), len(table))
+        return str(table.head(rows))
+
+
+def get_table_info(table):
+    if table is None:
+        return "Błąd wczytywania pliku"
+
+    table_len = len(table)
+    columns = len(table.columns) - 1
+    classes = len(table[table.columns[-1]].unique())
+    class_sizes = table[table.columns[-1]].value_counts().to_dict()
+
+    info = f"Tabela zawiera {table_len} obiektów i {columns} atrybutów.\n"
+    info += f"Liczba klas decyzyjnych: {classes}\n"
+    info += "Wielkość każdej klasy decyzyjnej:\n"
+    for i, size in class_sizes.items():
+        info += f" - {i}: {size}\n"
+
+    return info
+
+
+def predict(file, rows):
+    table = read_table(file)
+    table_display = display_table(table, rows)
+    table_info = get_table_info(table)
+
+    return f"{table_display}\n\n{table_info}"
+
+
+iface = gr.Interface(fn=predict, inputs=["text", "text"], outputs="text", title="Chatbot dla tabel decyzyjnych")
+iface.launch(share=False)
